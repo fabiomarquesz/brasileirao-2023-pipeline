@@ -18,12 +18,11 @@ Solução adotada: baixar o HTML via DevTools (copy(document.documentElement.out
 e parsear localmente. HTMLs ficam em scraping/data/raw_html/ (não versionados no git).
 
 ## HTMLs necessários (já baixados)
-- matches.html   → https://fbref.com/en/comps/24/2023/schedule/2023-Serie-A-Scores-and-Fixtures
-- players.html   → https://fbref.com/en/comps/24/2023/stats/2023-Serie-A-Stats
-- advanced.html  → https://fbref.com/en/comps/24/2023/shooting/2023-Serie-A-Stats
+- matches.html    → https://fbref.com/en/comps/24/2023/schedule/2023-Serie-A-Scores-and-Fixtures
+- players.html    → https://fbref.com/en/comps/24/2023/stats/2023-Serie-A-Stats
+- advanced.html   → https://fbref.com/en/comps/24/2023/shooting/2023-Serie-A-Stats
 - possession.html → https://fbref.com/en/comps/24/2023/possession/2023-Serie-A-Stats
-- expected.html  → https://fbref.com/en/comps/24/2023/expected/2023-Serie-A-Stats
-- xg.html        → https://fbref.com/en/comps/24/2023/gca/2023-Serie-A-Stats
+- expected.html   → https://fbref.com/en/comps/24/2023/expected/2023-Serie-A-Stats
 
 ## Estrutura do projeto
 ```
@@ -39,9 +38,9 @@ brasileirao-2023-pipeline/
 │   └── venv/                      # Ambiente virtual (não vai pro git)
 ├── airflow/
 │   ├── dags/
-│   │   ├── dag_scrape_raw.py      # VAZIO — próximo passo
-│   │   ├── dag_transform.py       # VAZIO
-│   │   └── dag_analysis.py        # VAZIO
+│   │   ├── dag_scrape_raw.py      # PRONTO
+│   │   ├── dag_transform.py       # PRONTO — executado com sucesso
+│   │   └── dag_analysis.py        # PRONTO — executado com sucesso
 │   ├── plugins/
 │   └── logs/
 ├── db/
@@ -50,7 +49,7 @@ brasileirao-2023-pipeline/
 │       ├── 02_dwh_schema.sql      # PRONTO
 │       └── 03_analytics_schema.sql # PRONTO
 ├── analysis/
-│   ├── notebooks/
+│   ├── notebooks/                 # PRÓXIMO PASSO
 │   └── models/
 ├── docker-compose.yml             # PRONTO
 ├── .env                           # PRONTO (não vai pro git)
@@ -60,8 +59,8 @@ brasileirao-2023-pipeline/
 ```
 
 ## Containers Docker
-- brasileirao_postgres        → porta 5434
-- brasileirao_pgadmin         → http://localhost:5050
+- brasileirao_postgres         → porta 5434
+- brasileirao_pgadmin          → http://localhost:5050
 - brasileirao_airflow_webserver → http://localhost:8080 (user: airflow / pass: airflow)
 - brasileirao_airflow_scheduler → interno
 
@@ -69,11 +68,21 @@ brasileirao-2023-pipeline/
 - Postgres: user=brasileirao / pass=brasileirao123 / db=brasileirao_db / porta=5434
 - PgAdmin: admin@brasileirao.com / admin123
 - Airflow: airflow / airflow
+- Conexão Airflow→Postgres: Connection Id=brasileirao_postgres, Host=postgres, Port=5432
 
 ## Dados no banco
-- raw.matches:        380 partidas ✅
-- raw.player_stats:   751 jogadores ✅
-- raw.advanced_stats: 20 times ✅
+- raw.matches:              380 partidas ✅
+- raw.player_stats:         751 jogadores ✅
+- raw.advanced_stats:       20 times ✅
+- dwh.dim_teams:            20 times ✅
+- dwh.dim_players:          populado ✅
+- dwh.dim_date:             populado ✅
+- dwh.fact_matches:         populado ✅
+- dwh.fact_player_stats:    populado ✅
+- dwh.fact_advanced_stats:  populado ✅
+- analytics.team_performance: populado ✅
+- analytics.win_factors:    populado ✅
+- analytics.player_impact:  populado ✅
 
 ## Como ativar o ambiente virtual
 ```bash
@@ -89,23 +98,28 @@ python scraping/scrapers/player_scraper.py
 python scraping/scrapers/advanced_scraper.py
 ```
 
+## Como rodar as DAGs
+1. Acesse http://localhost:8080
+2. Execute em ordem: dag_transform → dag_analysis
+
 ## Plano de commits
-- [x] commit 1 — chore: initial project structure and .gitignore
-- [x] commit 2 — infra: add docker-compose with postgres, airflow and pgadmin
-- [x] commit 3 — infra: add database init scripts (raw, dwh, analytics schemas)
-- [x] commit 4 — feat: add fbref match scraper (results and goals)
-- [x] commit 5 — feat: add fbref player stats scraper
-- [x] commit 6 — feat: add fbref advanced metrics scraper (possession, shooting, misc)
-- [ ] commit 7 — feat: add airflow DAG for raw data ingestion
-- [ ] commit 8 — feat: add airflow DAG for staging transformation
-- [ ] commit 9 — feat: add airflow DAG for analytics pipeline
-- [ ] commit 10 — docs: add README with architecture and setup guide
+- [x] commit 1  — chore: initial project structure and .gitignore
+- [x] commit 2  — infra: add docker-compose with postgres, airflow and pgadmin
+- [x] commit 3  — infra: add database init scripts (raw, dwh, analytics schemas)
+- [x] commit 4  — feat: add fbref match scraper (results and goals)
+- [x] commit 5  — feat: add fbref player stats scraper
+- [x] commit 6  — feat: add fbref advanced metrics scraper (possession, shooting, misc)
+- [x] commit 7  — feat: add airflow DAGs for scraping, transformation and analysis pipeline
+- [x] commit 8  — docs: add README with architecture and setup guide
+- [ ] commit 9  — feat: add EDA notebook (análise exploratória)
+- [ ] commit 10 — feat: add win prediction model
 
 ## Próximo passo
-Commit 7 — criar as DAGs do Airflow:
-- dag_scrape_raw.py: orquestra os 3 scrapers em sequência
-- dag_transform.py: move dados do schema raw para dwh (dim/fact tables)
-- dag_analysis.py: popula as tabelas de analytics
+Criar notebooks de análise exploratória em analysis/notebooks/:
+- 01_eda_matches.ipynb      → análise das partidas
+- 02_eda_players.ipynb      → análise dos jogadores
+- 03_correlations.ipynb     → correlações entre métricas e vitória
+- 04_win_prediction.ipynb   → modelo de predição
 
 ## Convenção de commits
 - feat: nova funcionalidade
