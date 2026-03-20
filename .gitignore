@@ -14,3 +14,6 @@ data/raw/
 data/processed/
 *.log
 .ipynb_checkpoints/
+scraping/venv/
+scraping/venv/
+scraping/data/
