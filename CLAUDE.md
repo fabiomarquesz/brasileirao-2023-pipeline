@@ -6,7 +6,7 @@ Coletar estatísticas do FBref, armazenar no PostgreSQL via Docker, orquestrar c
 e analisar correlações entre métricas e vitórias/derrotas dos times.
 
 ## Stack
-- Scraping: Python + BeautifulSoup + soccerdata (fonte: FBref.com — HTML local)
+- Scraping: Python + BeautifulSoup (fonte: FBref.com — HTML local)
 - Orquestração: Apache Airflow 2.8.1
 - Banco de dados: PostgreSQL 15 (porta 5434)
 - Infra: Docker Compose
@@ -14,25 +14,32 @@ e analisar correlações entre métricas e vitórias/derrotas dos times.
 
 ## Importante — FBref e Cloudflare
 O FBref bloqueia requests automáticos via Cloudflare (403).
-Solução adotada: baixar o HTML manualmente no navegador e parsear localmente.
-HTMLs ficam em scraping/data/raw_html/ (não versionados no git).
+Solução adotada: baixar o HTML via DevTools (copy(document.documentElement.outerHTML))
+e parsear localmente. HTMLs ficam em scraping/data/raw_html/ (não versionados no git).
+
+## HTMLs necessários (já baixados)
+- matches.html   → https://fbref.com/en/comps/24/2023/schedule/2023-Serie-A-Scores-and-Fixtures
+- players.html   → https://fbref.com/en/comps/24/2023/stats/2023-Serie-A-Stats
+- advanced.html  → https://fbref.com/en/comps/24/2023/shooting/2023-Serie-A-Stats
+- possession.html → https://fbref.com/en/comps/24/2023/possession/2023-Serie-A-Stats
+- expected.html  → https://fbref.com/en/comps/24/2023/expected/2023-Serie-A-Stats
+- xg.html        → https://fbref.com/en/comps/24/2023/gca/2023-Serie-A-Stats
 
 ## Estrutura do projeto
 ```
 brasileirao-2023-pipeline/
 ├── scraping/
 │   ├── scrapers/
-│   │   ├── match_scraper.py       # PRONTO — lê matches.html local
-│   │   ├── player_scraper.py      # VAZIO
-│   │   └── advanced_scraper.py    # VAZIO
+│   │   ├── match_scraper.py       # PRONTO — 380 partidas
+│   │   ├── player_scraper.py      # PRONTO — 751 jogadores
+│   │   └── advanced_scraper.py    # PRONTO — 20 times
 │   ├── data/
-│   │   └── raw_html/
-│   │       └── matches.html       # HTML baixado manualmente do FBref
+│   │   └── raw_html/              # HTMLs baixados manualmente (não no git)
 │   ├── requirements.txt           # PRONTO
 │   └── venv/                      # Ambiente virtual (não vai pro git)
 ├── airflow/
 │   ├── dags/
-│   │   ├── dag_scrape_raw.py      # VAZIO
+│   │   ├── dag_scrape_raw.py      # VAZIO — próximo passo
 │   │   ├── dag_transform.py       # VAZIO
 │   │   └── dag_analysis.py        # VAZIO
 │   ├── plugins/
@@ -52,9 +59,9 @@ brasileirao-2023-pipeline/
 └── README.md                      # PRONTO
 ```
 
-## Containers Docker (todos rodando)
-- brasileirao_postgres       → porta 5434
-- brasileirao_pgadmin        → http://localhost:5050
+## Containers Docker
+- brasileirao_postgres        → porta 5434
+- brasileirao_pgadmin         → http://localhost:5050
 - brasileirao_airflow_webserver → http://localhost:8080 (user: airflow / pass: airflow)
 - brasileirao_airflow_scheduler → interno
 
@@ -64,16 +71,9 @@ brasileirao-2023-pipeline/
 - Airflow: airflow / airflow
 
 ## Dados no banco
-- raw.matches: 380 partidas do Brasileirão 2023 ✅
-- raw.player_stats: vazio (próximo passo)
-- raw.advanced_stats: vazio (próximo passo)
-- Observação: home_xg e away_xg estão vazios — FBref não exibe xG na tabela
-  de resultados. Serão coletados via páginas individuais de cada partida.
-
-## HTMLs necessários (baixar manualmente no navegador)
-- matches.html → https://fbref.com/en/comps/24/2023/schedule/2023-Serie-A-Scores-and-Fixtures
-- players.html → https://fbref.com/en/comps/24/2023/stats/2023-Serie-A-Stats (a baixar)
-- advanced.html → https://fbref.com/en/comps/24/2023/shooting/2023-Serie-A-Stats (a baixar)
+- raw.matches:        380 partidas ✅
+- raw.player_stats:   751 jogadores ✅
+- raw.advanced_stats: 20 times ✅
 
 ## Como ativar o ambiente virtual
 ```bash
@@ -81,23 +81,31 @@ cd ~/Documentos/brasileirao-2023-pipeline
 source scraping/venv/bin/activate
 ```
 
+## Como rodar os scrapers
+```bash
+source scraping/venv/bin/activate
+python scraping/scrapers/match_scraper.py
+python scraping/scrapers/player_scraper.py
+python scraping/scrapers/advanced_scraper.py
+```
+
 ## Plano de commits
 - [x] commit 1 — chore: initial project structure and .gitignore
 - [x] commit 2 — infra: add docker-compose with postgres, airflow and pgadmin
 - [x] commit 3 — infra: add database init scripts (raw, dwh, analytics schemas)
 - [x] commit 4 — feat: add fbref match scraper (results and goals)
-- [ ] commit 5 — feat: add fbref player stats scraper
-- [ ] commit 6 — feat: add fbref advanced metrics scraper (xG, possession)
+- [x] commit 5 — feat: add fbref player stats scraper
+- [x] commit 6 — feat: add fbref advanced metrics scraper (possession, shooting, misc)
 - [ ] commit 7 — feat: add airflow DAG for raw data ingestion
 - [ ] commit 8 — feat: add airflow DAG for staging transformation
 - [ ] commit 9 — feat: add airflow DAG for analytics pipeline
 - [ ] commit 10 — docs: add README with architecture and setup guide
 
 ## Próximo passo
-Commit 5 — player_scraper.py
-Baixar manualmente: https://fbref.com/en/comps/24/2023/stats/2023-Serie-A-Stats
-Salvar como scraping/data/raw_html/players.html
-Parsear estatísticas por jogador e salvar em raw.player_stats
+Commit 7 — criar as DAGs do Airflow:
+- dag_scrape_raw.py: orquestra os 3 scrapers em sequência
+- dag_transform.py: move dados do schema raw para dwh (dim/fact tables)
+- dag_analysis.py: popula as tabelas de analytics
 
 ## Convenção de commits
 - feat: nova funcionalidade
