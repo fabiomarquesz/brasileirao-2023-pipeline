@@ -46,7 +46,7 @@ def load_page() -> BeautifulSoup:
 # ─────────────────────────────────────────
 # Parseia os jogadores da tabela do FBref
 # ─────────────────────────────────────────
-def parse_players(soup: BeautifulSoup) -> list[dict]:
+def parse_players(soup: BeautifulSoup) -> list:
     players = []
 
     table = soup.find("table", {"id": "stats_standard"})

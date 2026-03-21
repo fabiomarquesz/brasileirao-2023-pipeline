@@ -77,7 +77,7 @@ def parse_team_table(soup: BeautifulSoup, table_id: str) -> dict:
 # ─────────────────────────────────────────
 # Coleta e combina métricas avançadas por time
 # ─────────────────────────────────────────
-def parse_advanced_stats(soups: dict) -> list[dict]:
+def parse_advanced_stats(soups: dict) -> list:
     stats = []
 
     # Tabelas por fonte

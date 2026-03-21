@@ -1,7 +1,9 @@
 version: '3.8'
 
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.8.1
+  build:
+    context: .
+    dockerfile: airflow/Dockerfile
   environment: &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -17,6 +19,7 @@ x-airflow-common: &airflow-common
     - ./airflow/plugins:/opt/airflow/plugins
     - ./airflow/logs:/opt/airflow/logs
     - ./scraping:/opt/airflow/scraping
+    - ./scraping/data/raw_html:/opt/airflow/scraping/data/raw_html
   depends_on:
     postgres:
       condition: service_healthy

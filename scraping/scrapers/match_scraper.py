@@ -47,7 +47,7 @@ def load_page() -> BeautifulSoup:
 # ─────────────────────────────────────────
 # Parseia as partidas da tabela do FBref
 # ─────────────────────────────────────────
-def parse_matches(soup: BeautifulSoup) -> list[dict]:
+def parse_matches(soup: BeautifulSoup) -> list:
     matches = []
 
     table = soup.find("table", {"id": "sched_2023_24_1"})
