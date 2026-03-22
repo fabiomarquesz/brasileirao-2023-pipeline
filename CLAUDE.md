@@ -38,11 +38,12 @@ brasileirao-2023-pipeline/
 │   └── venv/                      # Ambiente virtual (não vai pro git)
 ├── airflow/
 │   ├── dags/
-│   │   ├── dag_scrape_raw.py      # PRONTO
-│   │   ├── dag_transform.py       # PRONTO — executado com sucesso
-│   │   └── dag_analysis.py        # PRONTO — executado com sucesso
+│   │   ├── dag_scrape_raw.py      # PRONTO — roda os 3 scrapers ✅
+│   │   ├── dag_transform.py       # PRONTO — popula dwh ✅
+│   │   └── dag_analysis.py        # PRONTO — popula analytics ✅
 │   ├── plugins/
-│   └── logs/
+│   ├── logs/
+│   └── Dockerfile                 # PRONTO — dependências Python instaladas
 ├── db/
 │   └── init/
 │       ├── 01_raw_schema.sql      # PRONTO
@@ -84,23 +85,17 @@ brasileirao-2023-pipeline/
 - analytics.win_factors:    populado ✅
 - analytics.player_impact:  populado ✅
 
-## Como ativar o ambiente virtual
+## Como subir o ambiente
 ```bash
 cd ~/Documentos/brasileirao-2023-pipeline
+docker compose up -d
 source scraping/venv/bin/activate
 ```
 
-## Como rodar os scrapers
-```bash
-source scraping/venv/bin/activate
-python scraping/scrapers/match_scraper.py
-python scraping/scrapers/player_scraper.py
-python scraping/scrapers/advanced_scraper.py
-```
-
-## Como rodar as DAGs
-1. Acesse http://localhost:8080
-2. Execute em ordem: dag_transform → dag_analysis
+## Como rodar as DAGs (ordem correta)
+1. dag_scrape_raw  → coleta dados do FBref
+2. dag_transform   → popula dwh
+3. dag_analysis    → popula analytics
 
 ## Plano de commits
 - [x] commit 1  — chore: initial project structure and .gitignore
@@ -111,8 +106,9 @@ python scraping/scrapers/advanced_scraper.py
 - [x] commit 6  — feat: add fbref advanced metrics scraper (possession, shooting, misc)
 - [x] commit 7  — feat: add airflow DAGs for scraping, transformation and analysis pipeline
 - [x] commit 8  — docs: add README with architecture and setup guide
-- [ ] commit 9  — feat: add EDA notebook (análise exploratória)
-- [ ] commit 10 — feat: add win prediction model
+- [x] commit 9  — fix: postgres host config for airflow containers and dockerfile deps
+- [ ] commit 10 — feat: add EDA notebook (análise exploratória)
+- [ ] commit 11 — feat: add win prediction model
 
 ## Próximo passo
 Criar notebooks de análise exploratória em analysis/notebooks/:
