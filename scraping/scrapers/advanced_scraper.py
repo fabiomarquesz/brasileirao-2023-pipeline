@@ -145,7 +145,7 @@ def parse_advanced_stats(soups: dict) -> list:
 # ─────────────────────────────────────────
 # Salva no banco
 # ─────────────────────────────────────────
-def save_advanced_stats(stats: list[dict]):
+def save_advanced_stats(stats: list):
     conn = get_connection()
     cur  = conn.cursor()
 

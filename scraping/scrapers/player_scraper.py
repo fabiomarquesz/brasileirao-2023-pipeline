@@ -132,7 +132,7 @@ def parse_players(soup: BeautifulSoup) -> list:
 # ─────────────────────────────────────────
 # Salva os jogadores no banco
 # ─────────────────────────────────────────
-def save_players(players: list[dict]):
+def save_players(players: list):
     conn = get_connection()
     cur  = conn.cursor()
 

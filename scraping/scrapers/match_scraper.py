@@ -117,7 +117,7 @@ def parse_matches(soup: BeautifulSoup) -> list:
 # ─────────────────────────────────────────
 # Salva as partidas no banco
 # ─────────────────────────────────────────
-def save_matches(matches: list[dict]):
+def save_matches(matches: list):
     conn = get_connection()
     cur  = conn.cursor()
 
